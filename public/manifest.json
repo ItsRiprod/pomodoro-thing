@@ -1,0 +1,19 @@
+{
+  "label": "Hello World App",
+  "isAudioSource": false,
+  "isScreenSaver": false,
+  "isWebApp": true,
+  "requires": [],
+  "version": "0.10.4",
+  "description": "A simple hello world app to demo DeskThing app development",
+  "author": "Graham Place",
+  "platforms": [
+    "linux",
+    "windows",
+    "mac"
+  ],
+  "homepage": "",
+  "repository": "",
+  "id": "hello-world-thing",
+  "template": "full"
+}
