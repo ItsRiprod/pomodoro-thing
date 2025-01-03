@@ -1,16 +1,8 @@
-button {
-  background: transparent;
-  background-color: transparent;
-
-  border: none;
-}
-button:focus {
-  outline: none;
-  border: none;
-}
-button:active {
-  outline: none;
-  border: none;
+@layer base {
+  :root {
+    --themeA: #2dd4bf;
+    --themeB: #fef08a;
+  }
 }
 
 @tailwind base;

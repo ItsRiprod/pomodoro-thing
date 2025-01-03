@@ -1,19 +1,15 @@
 {
-  "label": "Hello World App",
+  "label": "PomodoroThing",
   "isAudioSource": false,
   "isScreenSaver": false,
   "isWebApp": true,
   "requires": [],
-  "version": "0.10.4",
-  "description": "A simple hello world app to demo DeskThing app development",
+  "version": "0.0.1",
+  "description": "A Pomodoro timer DeskThing app",
   "author": "Graham Place",
-  "platforms": [
-    "linux",
-    "windows",
-    "mac"
-  ],
+  "platforms": ["linux", "windows", "mac"],
   "homepage": "",
   "repository": "",
-  "id": "hello-world-thing",
+  "id": "pomodoro-thing",
   "template": "full"
 }
