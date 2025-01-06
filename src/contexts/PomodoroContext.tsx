@@ -8,7 +8,7 @@ import {
 } from "../constants";
 
 // TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state
-interface PomodoroContextType {
+export interface PomodoroContextType {
   totalSessions: number;
   currentSession: number;
   setCurrentSession: React.Dispatch<React.SetStateAction<number>>;

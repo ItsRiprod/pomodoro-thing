@@ -1,52 +1,27 @@
-import ChevronRight from "./icons/ChevronRight";
-import PlayCircle from "./icons/PlayCircle";
-import PauseCircle from "./icons/PauseCircle";
-import Refresh from "./icons/Refresh";
-import { usePomodoroContext } from "../contexts/PomodoroContext";
+import { requirePomodoroContext } from "../util";
+import ControlIcon from "./ControlIcon";
+import StageIcon from "./StageIcon";
 
 export default function Controls() {
-  const p = usePomodoroContext();
-  if (!p) {
-    throw new Error("Missing Pomodoro Context");
-  }
+  const p = requirePomodoroContext();
 
   return (
     <div className="z-30 flex flex-row items-center space-x-1 text-white">
-      <button
-        className="focus:outline-none focus:ring-0 bg-transparent"
-        onTouchStart={p.handlePrevious}
-      >
-        <ChevronRight className="size-[60px] cursor-pointer rotate-180" />
-      </button>
-      {/* TODO: refactor to use non-circle icons, so that all icons can be in a circle, including refresh */}
-      {p.isComplete ? (
-        <button
-          className="focus:outline-none focus:ring-0 bg-transparent"
-          onTouchStart={p.handleReset}
-        >
-          <Refresh className="size-[80px] cursor-pointer" />
-        </button>
-      ) : p.isPaused ? (
-        <button
-          className="focus:outline-none focus:ring-0 bg-transparent"
-          onTouchStart={p.handlePause}
-        >
-          <PlayCircle className="size-[80px] cursor-pointer" />
-        </button>
-      ) : (
-        <button
-          className="focus:outline-none focus:ring-0 bg-transparent"
-          onTouchStart={p.handlePause}
-        >
-          <PauseCircle className="size-[80px] cursor-pointer" />
-        </button>
-      )}
-      <button
-        className="focus:outline-none focus:ring-0 bg-transparent"
-        onTouchStart={p.handleNext}
-      >
-        <ChevronRight className="size-[60px] cursor-pointer" />
-      </button>
+      <StageIcon controlType="prev" onClick={() => p.handlePrevious()} />
+      <MainControl />
+      <StageIcon controlType="next" onClick={() => p.handleNext()} />
     </div>
+  );
+}
+
+function MainControl() {
+  const p = requirePomodoroContext();
+
+  return p.isComplete ? (
+    <ControlIcon onClick={p.handleReset} controlType="restart" />
+  ) : p.isPaused ? (
+    <ControlIcon onClick={p.handlePause} controlType="play" />
+  ) : (
+    <ControlIcon onClick={p.handlePause} controlType="pause" />
   );
 }

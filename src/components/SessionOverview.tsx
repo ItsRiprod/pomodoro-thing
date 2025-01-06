@@ -1,12 +1,9 @@
-import { usePomodoroContext } from "../contexts/PomodoroContext";
 import { TimerMode } from "../types";
 import { clsx } from "clsx";
+import { requirePomodoroContext } from "../util";
 
 export default function SessionOverview({}) {
-  const p = usePomodoroContext();
-  if (!p) {
-    throw new Error("Missing Pomodoro Context");
-  }
+  const p = requirePomodoroContext();
 
   return (
     <div className="z-30 flex flex-col items-center">

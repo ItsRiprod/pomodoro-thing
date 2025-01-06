@@ -1,16 +1,10 @@
 import React, { useEffect } from "react";
 import { DeskThing, SocketData } from "deskthing-client";
-import { usePomodoroContext } from "./contexts/PomodoroContext";
 import SessionOverview from "./components/SessionOverview";
 import Controls from "./components/Controls";
 import Timer from "./components/Timer";
 
 const Pomodoro: React.FC = () => {
-  const p = usePomodoroContext();
-  if (!p) {
-    throw new Error("Missing Pomodoro Context");
-  }
-
   // On mount, set up DeskThing listener for data from the server
   useEffect(() => {
     const onAppData = async (data: SocketData) => {

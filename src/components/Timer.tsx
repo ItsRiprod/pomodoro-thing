@@ -1,14 +1,10 @@
 import { useEffect } from "react";
-import { usePomodoroContext } from "../contexts/PomodoroContext";
-import { formatTime } from "../util";
+import { formatTime, requirePomodoroContext } from "../util";
 import { MAX_MINUTES, TIMER_INTERVAL } from "../constants";
 import { useDebouncedCallback } from "use-debounce";
 
 export default function Timer() {
-  const p = usePomodoroContext();
-  if (!p) {
-    throw new Error("Missing Pomodoro Context");
-  }
+  const p = requirePomodoroContext();
 
   const incrementMinutes = () => {
     const newMinutesLeft = Math.floor(p.timeLeftSec / 60) + 1;

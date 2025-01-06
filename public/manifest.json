@@ -1,5 +1,5 @@
 {
-  "label": "PomodoroThing",
+  "label": "Pomodoro Timer",
   "isAudioSource": false,
   "isScreenSaver": false,
   "isWebApp": true,
@@ -10,6 +10,6 @@
   "platforms": ["linux", "windows", "mac"],
   "homepage": "",
   "repository": "",
-  "id": "pomodoro-thing",
+  "id": "pomodoro-timer",
   "template": "full"
 }
