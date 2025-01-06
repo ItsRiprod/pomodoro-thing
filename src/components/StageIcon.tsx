@@ -11,10 +11,13 @@ export default function StageIcon({
   onClick: () => void;
 }) {
   return (
-    <button className="focus:outline-none focus:ring-0 " onTouchStart={onClick}>
+    <button
+      className="focus:outline-none focus:ring-0 bg-transparent"
+      onTouchStart={onClick}
+    >
       <ChevronRight
         className={clsx(
-          "size-[85px] cursor-pointer bg-transparent",
+          "size-[85px] cursor-pointer",
           controlType === "prev" && "rotate-180"
         )}
       />
