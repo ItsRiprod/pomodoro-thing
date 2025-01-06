@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { formatTime, requirePomodoroContext } from "../util";
+import { formatTime, playNotification, requirePomodoroContext } from "../util";
 import { MAX_MINUTES, TIMER_INTERVAL } from "../constants";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -39,6 +39,7 @@ export default function Timer() {
       if (!p.isPaused) {
         const nextValue = p.timeLeftSec - 1;
         if (nextValue <= 0) {
+          playNotification();
           p.handleNext();
         } else {
           p.setTimeLeftSec((prev) => Math.max(prev - 1, 0));

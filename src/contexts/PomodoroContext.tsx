@@ -6,8 +6,9 @@ import {
   NUM_SESSIONS,
   SESSION_SECONDS,
 } from "../constants";
+import { playNotification } from "../util";
 
-// TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state
+// TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state on e.g. app switches
 export interface PomodoroContextType {
   totalSessions: number;
   currentSession: number;
@@ -77,6 +78,8 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   function endLongBreak() {
     setTimeLeftSec(0);
     setIsComplete(true);
+    setIsPaused(true);
+    playNotification();
   }
 
   function resetCurrent() {

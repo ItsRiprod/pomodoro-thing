@@ -1,3 +1,4 @@
+import { DeskThing } from "deskthing-client";
 import {
   PomodoroContextType,
   usePomodoroContext,
@@ -17,4 +18,8 @@ export function requirePomodoroContext(): PomodoroContextType {
     throw new Error("Missing Pomodoro Context");
   }
   return p;
+}
+
+export function playNotification() {
+  DeskThing.send({ type: "notify" });
 }
