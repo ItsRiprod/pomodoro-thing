@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { formatTime, requirePomodoroContext } from "../util";
 import { MAX_MINUTES, TIMER_INTERVAL } from "../constants";
-import { useDebouncedCallback } from "use-debounce";
 
 export default function Timer() {
   const p = requirePomodoroContext();
@@ -15,8 +14,6 @@ export default function Timer() {
     }
   };
 
-  const debouncedIncrement = useDebouncedCallback(incrementMinutes, 10);
-
   const decrementMinutes = () => {
     const newMinutesLeft = Math.floor(p.timeLeftSec / 60) - 1;
     if (newMinutesLeft >= 0) {
@@ -25,8 +22,6 @@ export default function Timer() {
       p.setTimeLeftSec(0);
     }
   };
-
-  const debouncedDecrement = useDebouncedCallback(decrementMinutes, 10);
 
   // Set up timer, which can be paused/unpaused based on isPaused
   useEffect(() => {
@@ -51,9 +46,9 @@ export default function Timer() {
     document.addEventListener("wheel", (e) => {
       const isUp = e.deltaX > 0 || e.deltaY < 0;
       if (isUp) {
-        debouncedDecrement();
+        incrementMinutes();
       } else {
-        debouncedIncrement();
+        decrementMinutes();
       }
     });
   }, []);
