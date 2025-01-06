@@ -48,15 +48,25 @@ export default function Timer() {
 
   // Set up a listener for wheel events, to allow user to manually adjust the timer up/down
   useEffect(() => {
-    document.addEventListener("wheel", (e) => {
+    const handleWheel = (e: WheelEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
       const isUp = e.deltaX > 0 || e.deltaY < 0;
       if (isUp) {
         debouncedDecrement();
       } else {
         debouncedIncrement();
       }
-    });
-  }, []);
+    };
+
+    const appElem = document.getElementById("root");
+    if (appElem) {
+      appElem.addEventListener("wheel", handleWheel);
+    }
+    return () => {
+      appElem?.removeEventListener("wheel", handleWheel);
+    };
+  }, [debouncedDecrement, debouncedIncrement]);
 
   return (
     <p className="z-30 font-bold text-[140px] text-white">
