@@ -14,7 +14,7 @@ export default function ControlIcon({
   return (
     <button
       onTouchStart={onClick}
-      className="size-[80px] rounded-full focus:outline-none focus:ring-0 bg-transparent border-[4px] border-white p-2 flex items-center justify-center"
+      className="size-[85px] rounded-full focus:outline-none focus:ring-0 bg-transparent border-[4px] border-white p-2 flex items-center justify-center"
     >
       {getIconElem(controlType)}
     </button>
