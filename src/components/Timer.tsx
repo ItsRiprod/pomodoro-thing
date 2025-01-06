@@ -18,7 +18,12 @@ export default function Timer() {
   const debouncedIncrement = useDebouncedCallback(incrementMinutes, 10);
 
   const decrementMinutes = () => {
-    const newMinutesLeft = Math.floor(p.timeLeftSec / 60) - 1;
+    let newMinutesLeft = Math.floor(p.timeLeftSec / 60);
+    // Special Case: when on "even minute" (xx:00), decremeent by a full minute
+    if (newMinutesLeft === p.timeLeftSec / 60) {
+      newMinutesLeft = newMinutesLeft - 1;
+    }
+
     if (newMinutesLeft >= 0) {
       p.setTimeLeftSec(newMinutesLeft * 60);
     } else {
