@@ -1,10 +1,10 @@
 import { createContext, ReactNode, useContext, useState } from "react";
-import { TimerMode } from "../types";
+import { BreakType, TimerMode } from "../types";
 import {
-  BREAK_MINUTES,
-  LONG_BREAK_MINUTES,
+  BREAK_SECONDS,
+  LONG_BREAK_SECONDS,
   NUM_SESSIONS,
-  SESSION_MINUTES,
+  SESSION_SECONDS,
 } from "../constants";
 
 // TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state
@@ -40,73 +40,106 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   children,
 }) => {
   const [currentSession, setCurrentSession] = useState<number>(0);
-  const [currentMode, setCurrentMode] = useState<TimerMode>("session");
+  const [currentMode, setCurrentMode] = useState<TimerMode | BreakType>(
+    "session"
+  );
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [timeLeftSec, setTimeLeftSec] = useState<number>(SESSION_MINUTES * 60);
+  const [timeLeftSec, setTimeLeftSec] = useState<number>(SESSION_SECONDS);
   const [isComplete, setIsComplete] = useState<boolean>(false);
 
-  const handlePause = () => {
+  function handlePause() {
     setIsPaused((prev) => !prev);
-  };
+  }
+
+  function startSession(sessionNum: number) {
+    setIsComplete(false);
+    setCurrentMode("session");
+    setCurrentSession(Math.max(sessionNum, 0));
+    setTimeLeftSec(SESSION_SECONDS);
+  }
+
+  function startBreak(sessionNum: number, breakType: BreakType) {
+    setCurrentSession(Math.max(sessionNum, 0));
+    setIsComplete(false);
+    setCurrentMode(breakType);
+    switch (breakType) {
+      case "short-break":
+        setTimeLeftSec(BREAK_SECONDS);
+        break;
+      case "long-break":
+        setTimeLeftSec(LONG_BREAK_SECONDS);
+        break;
+      default:
+        throw new Error("Unimplemented breakType");
+    }
+  }
+
+  function endLongBreak() {
+    setTimeLeftSec(0);
+    setIsComplete(true);
+  }
+
+  function resetCurrent() {
+    setIsComplete(false);
+    switch (currentMode) {
+      case "session":
+        startSession(currentSession);
+        break;
+      case "long-break":
+      case "short-break":
+        startBreak(currentSession, currentMode);
+        break;
+    }
+  }
 
   const handlePrevious = () => {
-    // Case 1: left click on first session. Reset first session
+    // Special case: left click on first session ALWAYS ONLY restarts first session
     if (currentMode === "session" && currentSession === 0) {
-      setCurrentSession(0);
-      setTimeLeftSec(SESSION_MINUTES * 60);
-      setCurrentMode("session");
+      resetCurrent();
+      return;
     }
-    // Case 2: left click on any break. Reset to -1 session ago
-    else if (["short-break", "long-break"].includes(currentMode)) {
-      setIsComplete(false);
-      setTimeLeftSec(SESSION_MINUTES * 60);
-      setCurrentMode("session");
+    // If pressed at start of a break, go back one session (this handles "double click" behavior)
+    if (
+      (currentMode === "short-break" && timeLeftSec === BREAK_SECONDS) ||
+      (currentMode === "long-break" && timeLeftSec === LONG_BREAK_SECONDS)
+    ) {
+      startSession(currentSession - 1);
+      return;
     }
-    // Case 3: left click on any session besides first. Reset to previous short break
-    else if (currentMode === "session" && currentSession !== 0) {
-      setTimeLeftSec(BREAK_MINUTES * 60);
-      setCurrentMode("short-break");
-      setCurrentSession((prev) => prev - 1);
-    } else {
-      console.error("Unhandled left click state");
+
+    // If pressed at start of a session, go back one break (this handles "double click" behavior)
+    if (currentMode === "session" && timeLeftSec === SESSION_SECONDS) {
+      startBreak(currentSession - 1, "short-break"); // You can never go backwards from session to long break, since there is no session after long break
+      return;
     }
+
+    // Otherwise, restart current
+    resetCurrent();
   };
 
   const handleNext = () => {
-    // Case 1: right click on last session. Go to long break
-    if (currentMode === "session" && currentSession === totalSessions - 1) {
-      setTimeLeftSec(LONG_BREAK_MINUTES * 60);
-      setCurrentMode("long-break");
+    // Case 1: right click during session. Go to next break
+    if (currentMode === "session") {
+      startBreak(
+        currentSession,
+        currentSession === totalSessions - 1 ? "long-break" : "short-break"
+      );
     }
     // Case 2: right click on any short break. Go to next session
     else if (currentMode === "short-break") {
-      setTimeLeftSec(SESSION_MINUTES * 60);
-      setCurrentMode("session");
-      setCurrentSession((prev) => prev + 1);
+      startSession(currentSession + 1);
     }
-    // Case 4: when long break ends, overall session is complete
+    // Case 3: when long break ends, overall session is complete
     else if (currentMode === "long-break") {
-      setTimeLeftSec(0);
-      setIsComplete(true);
-    }
-    // Case 3: right click on any session besides last. Go to next short break
-    else if (
-      currentMode === "session" &&
-      currentSession !== totalSessions - 1
-    ) {
-      setTimeLeftSec(BREAK_MINUTES * 60);
-      setCurrentMode("short-break");
+      endLongBreak();
     } else {
-      console.error("Unhandled left click state");
+      console.error("Unhandled handleNext state");
     }
   };
 
   const handleReset = () => {
-    setIsPaused(true);
-    setTimeLeftSec(SESSION_MINUTES * 60);
-    setIsComplete(false);
-    setCurrentMode("session");
-    setCurrentSession(0);
+    startSession(0);
+    setIsPaused(false);
   };
 
   return (
