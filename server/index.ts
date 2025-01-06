@@ -1,6 +1,5 @@
 import { DeskThing, IncomingEvent, SocketData } from "deskthing-server";
 import { setupSettings } from "./settings";
-import { userInput } from "./userInput";
 import { sendImage, sendSampleData } from "./sendingData";
 import { notify } from "./notify";
 import { APP_ID } from "../src/constants";
@@ -21,7 +20,6 @@ const start = async () => {
   sendLog("Server Started");
   const Data = await DeskThing.getData();
   setupSettings(Data);
-  userInput(Data);
 };
 
 const stop = async () => {
