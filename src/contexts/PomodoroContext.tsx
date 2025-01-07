@@ -1,16 +1,26 @@
-import { createContext, ReactNode, useContext, useState } from "react";
-import { BreakType, TimerMode } from "../types";
 import {
-  BREAK_SECONDS,
-  LONG_BREAK_SECONDS,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { BreakType, PomodoroSettings, TimerMode } from "../types";
+import {
+  BREAK_MINUTES,
+  COLOR_A_DEFAULT,
+  COLOR_B_DEFAULT,
+  LONG_BREAK_MINUTES,
   NUM_SESSIONS,
-  SESSION_SECONDS,
+  SESSION_MINUTES,
 } from "../constants";
 import { playNotification } from "../util";
 
 // TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state on e.g. app switches
 export interface PomodoroContextType {
-  totalSessions: number;
+  settings: PomodoroSettings;
+  handleSettingsChange: (settings: PomodoroSettings) => void;
   currentSession: number;
   setCurrentSession: React.Dispatch<React.SetStateAction<number>>;
   currentMode: TimerMode;
@@ -32,20 +42,29 @@ export const PomodoroContext = createContext<PomodoroContextType | null>(null);
 export const usePomodoroContext = () => useContext(PomodoroContext);
 
 interface PomodoroProviderProps {
-  totalSessions?: number;
   children: ReactNode;
 }
 
 export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
-  totalSessions = NUM_SESSIONS,
   children,
 }) => {
+  const [settings, setSettings] = useState<PomodoroSettings>({
+    numSessions: NUM_SESSIONS,
+    sessionMinutes: SESSION_MINUTES,
+    shortBreakMinutes: BREAK_MINUTES,
+    longBreakMinutes: LONG_BREAK_MINUTES,
+    audioEnabled: true,
+    colorA: COLOR_A_DEFAULT,
+    colorB: COLOR_B_DEFAULT,
+  });
   const [currentSession, setCurrentSession] = useState<number>(0);
   const [currentMode, setCurrentMode] = useState<TimerMode | BreakType>(
     "session"
   );
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [timeLeftSec, setTimeLeftSec] = useState<number>(SESSION_SECONDS);
+  const [timeLeftSec, setTimeLeftSec] = useState<number>(
+    settings.sessionMinutes * 60
+  );
   const [isComplete, setIsComplete] = useState<boolean>(false);
 
   function handlePause() {
@@ -56,7 +75,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     setIsComplete(false);
     setCurrentMode("session");
     setCurrentSession(Math.max(sessionNum, 0));
-    setTimeLeftSec(SESSION_SECONDS);
+    setTimeLeftSec(settings.sessionMinutes * 60);
   }
 
   function startBreak(sessionNum: number, breakType: BreakType) {
@@ -65,10 +84,10 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     setCurrentMode(breakType);
     switch (breakType) {
       case "short-break":
-        setTimeLeftSec(BREAK_SECONDS);
+        setTimeLeftSec(settings.shortBreakMinutes * 60);
         break;
       case "long-break":
-        setTimeLeftSec(LONG_BREAK_SECONDS);
+        setTimeLeftSec(settings.longBreakMinutes * 60);
         break;
       default:
         throw new Error("Unimplemented breakType");
@@ -103,15 +122,20 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     }
     // If pressed at start of a break, go back one session (this handles "double click" behavior)
     if (
-      (currentMode === "short-break" && timeLeftSec === BREAK_SECONDS) ||
-      (currentMode === "long-break" && timeLeftSec === LONG_BREAK_SECONDS)
+      (currentMode === "short-break" &&
+        timeLeftSec === settings.shortBreakMinutes * 60) ||
+      (currentMode === "long-break" &&
+        timeLeftSec === settings.longBreakMinutes * 60)
     ) {
       startSession(currentSession - 1);
       return;
     }
 
     // If pressed at start of a session, go back one break (this handles "double click" behavior)
-    if (currentMode === "session" && timeLeftSec === SESSION_SECONDS) {
+    if (
+      currentMode === "session" &&
+      timeLeftSec === settings.sessionMinutes * 60
+    ) {
       startBreak(currentSession - 1, "short-break"); // You can never go backwards from session to long break, since there is no session after long break
       return;
     }
@@ -125,7 +149,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     if (currentMode === "session") {
       startBreak(
         currentSession,
-        currentSession === totalSessions - 1 ? "long-break" : "short-break"
+        currentSession === settings.numSessions - 1
+          ? "long-break"
+          : "short-break"
       );
     }
     // Case 2: right click on any short break. Go to next session
@@ -145,10 +171,29 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     setIsPaused(false);
   };
 
+  // Use a ref to keep track of the previous settings state
+  const prevSettingsRef = useRef<PomodoroSettings>(settings);
+
+  const handleSettingsChange = (newSettings: PomodoroSettings) => {
+    setSettings(newSettings); // Update the state first
+  };
+
+  useEffect(() => {
+    const prevSettings = prevSettingsRef.current;
+
+    if (shouldReset(settings, prevSettings)) {
+      handleReset();
+    }
+
+    // Update the ref with the current settings after checks
+    prevSettingsRef.current = settings;
+  }, [settings]);
+
   return (
     <PomodoroContext.Provider
       value={{
-        totalSessions: NUM_SESSIONS,
+        settings,
+        handleSettingsChange,
         currentSession,
         setCurrentSession,
         currentMode,
@@ -169,3 +214,18 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     </PomodoroContext.Provider>
   );
 };
+
+// Reset session when session-related config values are changed
+// Otherwise, timer state might get a little wonky — e.g. user reduces numSessions to 2, when on #4
+// Nice to have: More sophisticated logic here that combines *which* settings changed with the current state
+function shouldReset(n: PomodoroSettings, o: PomodoroSettings): boolean {
+  if (
+    n.numSessions !== o.numSessions ||
+    n.sessionMinutes !== o.sessionMinutes ||
+    n.shortBreakMinutes !== o.shortBreakMinutes ||
+    n.longBreakMinutes !== o.longBreakMinutes
+  ) {
+    return true;
+  }
+  return false;
+}
