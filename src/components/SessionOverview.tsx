@@ -11,7 +11,7 @@ export default function SessionOverview({}) {
         {getModeEmoji(p.currentMode, p.timeLeftSec)}
       </p>
       <div className="flex flex-row items-center space-x-2 ">
-        {Array.from({ length: p.settings.numSessions }).map((_, idx) => (
+        {Array.from({ length: p.settings?.numSessions ?? 0 }).map((_, idx) => (
           <div
             key={idx}
             className={clsx(

@@ -1,6 +1,9 @@
 import { DeskThing, DataInterface, SettingsType } from "deskthing-server";
 
-export const setupSettings = async (Data: DataInterface | null) => {
+export const setupSettings = async (
+  Data: DataInterface | null,
+  log: (message: string) => void
+) => {
   const requiredSettings = [
     "colorA",
     "colorB",
@@ -16,6 +19,7 @@ export const setupSettings = async (Data: DataInterface | null) => {
   );
 
   if (!hasAllSettings) {
+    log("setupSettings: missing setting, configuring");
     const Settings: { [key: string]: SettingsType } = {
       colorA: {
         label: "Color A",
@@ -71,5 +75,7 @@ export const setupSettings = async (Data: DataInterface | null) => {
     };
 
     DeskThing.addSettings(Settings);
+  } else {
+    log("setupSettings: all settings configured");
   }
 };

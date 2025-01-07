@@ -7,19 +7,12 @@ import {
   useState,
 } from "react";
 import { BreakType, PomodoroSettings, TimerMode } from "../types";
-import {
-  BREAK_MINUTES,
-  COLOR_A_DEFAULT,
-  COLOR_B_DEFAULT,
-  LONG_BREAK_MINUTES,
-  NUM_SESSIONS,
-  SESSION_MINUTES,
-} from "../constants";
+
 import { playNotification } from "../util";
 
 // TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state on e.g. app switches
 export interface PomodoroContextType {
-  settings: PomodoroSettings;
+  settings: PomodoroSettings | null;
   handleSettingsChange: (settings: PomodoroSettings) => void;
   currentSession: number;
   setCurrentSession: React.Dispatch<React.SetStateAction<number>>;
@@ -48,22 +41,14 @@ interface PomodoroProviderProps {
 export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   children,
 }) => {
-  const [settings, setSettings] = useState<PomodoroSettings>({
-    numSessions: NUM_SESSIONS,
-    sessionMinutes: SESSION_MINUTES,
-    shortBreakMinutes: BREAK_MINUTES,
-    longBreakMinutes: LONG_BREAK_MINUTES,
-    audioEnabled: true,
-    colorA: COLOR_A_DEFAULT,
-    colorB: COLOR_B_DEFAULT,
-  });
+  const [settings, setSettings] = useState<PomodoroSettings | null>(null);
   const [currentSession, setCurrentSession] = useState<number>(0);
   const [currentMode, setCurrentMode] = useState<TimerMode | BreakType>(
     "session"
   );
-  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(true);
   const [timeLeftSec, setTimeLeftSec] = useState<number>(
-    settings.sessionMinutes * 60
+    (settings?.sessionMinutes ?? 0) * 60
   );
   const [isComplete, setIsComplete] = useState<boolean>(false);
 
@@ -72,6 +57,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   }
 
   function startSession(sessionNum: number) {
+    if (!settings) return;
     setIsComplete(false);
     setCurrentMode("session");
     setCurrentSession(Math.max(sessionNum, 0));
@@ -79,6 +65,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   }
 
   function startBreak(sessionNum: number, breakType: BreakType) {
+    if (!settings) return;
     setCurrentSession(Math.max(sessionNum, 0));
     setIsComplete(false);
     setCurrentMode(breakType);
@@ -95,6 +82,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   }
 
   function endLongBreak() {
+    if (!settings) return;
     setTimeLeftSec(0);
     setIsComplete(true);
     setIsPaused(true);
@@ -102,6 +90,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   }
 
   function resetCurrent() {
+    if (!settings) return;
     setIsComplete(false);
     switch (currentMode) {
       case "session":
@@ -115,6 +104,8 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   }
 
   const handlePrevious = () => {
+    if (!settings) return;
+
     // Special case: left click on first session ALWAYS ONLY restarts first session
     if (currentMode === "session" && currentSession === 0) {
       resetCurrent();
@@ -145,6 +136,8 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   };
 
   const handleNext = () => {
+    if (!settings) return;
+
     // Case 1: right click during session. Go to next break
     if (currentMode === "session") {
       startBreak(
@@ -167,25 +160,27 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   };
 
   const handleReset = () => {
+    if (!settings) return;
+
     startSession(0);
     setIsPaused(false);
   };
 
-  // Use a ref to keep track of the previous settings state
-  const prevSettingsRef = useRef<PomodoroSettings>(settings);
+  const prevSettingsRef = useRef<PomodoroSettings | null>(settings);
 
   const handleSettingsChange = (newSettings: PomodoroSettings) => {
-    setSettings(newSettings); // Update the state first
+    setSettings(newSettings);
   };
 
   useEffect(() => {
+    if (!settings) return;
+
     const prevSettings = prevSettingsRef.current;
 
-    if (shouldReset(settings, prevSettings)) {
+    if (prevSettings && shouldReset(settings, prevSettings)) {
       handleReset();
     }
 
-    // Update the ref with the current settings after checks
     prevSettingsRef.current = settings;
   }, [settings]);
 

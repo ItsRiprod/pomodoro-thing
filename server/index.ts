@@ -17,24 +17,27 @@ function sendError(message: string) {
 
 const start = async () => {
   sendLog("Server Started");
-  const Data = await DeskThing.getData();
-  await setupSettings(Data);
+  const data = await DeskThing.getData();
+  await setupSettings(data, sendLog);
 };
 
 const stop = async () => {
   sendLog("Server Stopped");
 };
 
-// TODO: Properly handle INITIAL SETTINGS on start. Maybe the client needs to fetch proactively first?
 function handleData(data: DataInterface | null) {
+  sendLog("handleData: running");
   const settings = data?.settings;
   if (!settings) {
     sendError("handleData: No settings ");
     return;
   }
 
+  sendLog(
+    "handleData: Sending settings: " + JSON.stringify(settings, undefined)
+  );
   DeskThing.send({
-    type: "settings",
+    type: "settings-update",
     payload: settings,
   });
 }
@@ -49,6 +52,24 @@ DeskThing.on("notify" as IncomingEvent, async () => {
     notify({ onError: sendError });
   } else {
     DeskThing.sendLog("Audio disabled. Skipping notification");
+  }
+});
+
+DeskThing.on("get", async (data) => {
+  if (data.request == "initial-settings") {
+    const data = await DeskThing.getData();
+    const settings = data?.settings;
+    if (!settings) {
+      sendError("get settings: No settings returned by DeskThing");
+      return;
+    }
+    sendLog(
+      "get settings: Sending settings: " + JSON.stringify(settings, undefined)
+    );
+    DeskThing.send({
+      type: "initial-settings",
+      payload: settings,
+    });
   }
 });
 

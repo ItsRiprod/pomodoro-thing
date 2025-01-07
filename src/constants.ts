@@ -1,5 +1,7 @@
+// Set IS_DEV to true to run timer in "fast mode", to easily check different behaviors
+export const IS_DEV = true; // MUSTFIX: set to false before releasing
+
 export const APP_ID = "pomodoro-timer";
-const IS_DEV = false; // Set to true to run timer in "fast mode", to easily check different behaviors
 export const NUM_SESSIONS = 4;
 export const MAX_MINUTES = 180;
 export const SESSION_MINUTES = IS_DEV ? 1 : 25;
