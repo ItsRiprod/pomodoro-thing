@@ -19,7 +19,8 @@ export default function Timer() {
 
   const decrementMinutes = () => {
     let newMinutesLeft = Math.floor(p.timeLeftSec / 60);
-    // Special Case: when on "even minute" (xx:00), decremeent by a full minute
+
+    // Special Case: when on "even minute" (xx:00), decrement by a full minute
     if (newMinutesLeft === p.timeLeftSec / 60) {
       newMinutesLeft = newMinutesLeft - 1;
     }

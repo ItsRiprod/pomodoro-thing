@@ -1,6 +1,5 @@
-import { DeskThing, IncomingEvent, SocketData } from "deskthing-server";
+import { DataInterface, DeskThing, IncomingEvent } from "deskthing-server";
 import { setupSettings } from "./settings";
-import { sendImage, sendSampleData } from "./sendingData";
 import { notify } from "./notify";
 import { APP_ID } from "../src/constants";
 
@@ -26,24 +25,35 @@ const stop = async () => {
   sendLog("Server Stopped");
 };
 
-const handleRequest = async (socketData: SocketData) => {
-  switch (socketData.request) {
-    case "sampleData":
-      sendSampleData();
-      break;
-    case "image":
-      sendImage();
-      break;
-    default:
-      sendError("Invalid Request");
-      break;
+function handleData(data: DataInterface) {
+  const settings = data.settings;
+  if (!settings) {
+    sendError("handleData: No settings ");
+    return;
   }
-};
 
-DeskThing.on("get", handleRequest);
+  if (settings.colorA) {
+    sendLog("new colorA :" + settings.colorA.value);
+    DeskThing.send({
+      type: "colorA",
+      payload: settings.colorA.value as string,
+    });
+  }
+
+  if (settings.colorB) {
+    sendLog("new colorB :" + settings.colorB.value);
+    DeskThing.send({
+      type: "colorB",
+      payload: settings.colorB.value as string,
+    });
+  }
+}
+
 DeskThing.on("start", start);
 DeskThing.on("stop", stop);
+DeskThing.on("data", handleData);
 DeskThing.on("notify" as IncomingEvent, () => {
   notify({ onError: sendError });
 });
+
 export { DeskThing };
