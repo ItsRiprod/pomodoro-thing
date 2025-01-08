@@ -6,12 +6,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { BreakType, PomodoroSettings, TimerMode } from "../types";
-
+import type { BreakType, PomodoroSettings, TimerMode } from "../types";
 import { playNotification } from "../util";
 import { DeskThing } from "deskthing-client";
 
-// TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state on e.g. app switches
 export interface PomodoroContextType {
   settings: PomodoroSettings | null;
   handleSettingsChange: (settings: PomodoroSettings) => void;
@@ -57,14 +55,53 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     setIsPaused((prev) => !prev);
   }
 
+  // On timeLeftSec changes, sync the value to the server, so that we can pick up where we left off after a background event
+  // TODO: can we remove 0 check?
   useEffect(() => {
     if (settings && timeLeftSec !== 0) {
       DeskThing.send({
-        type: "timerState",
-        payload: { test: "test", timeLeftSec },
+        type: "timeLeftSec",
+        payload: timeLeftSec,
       });
     }
   }, [timeLeftSec, setTimeLeftSec, settings]);
+
+  // TODO: sync additional Properties
+  useEffect(() => {
+    if (settings) {
+      DeskThing.send({
+        type: "isPaused",
+        payload: isPaused,
+      });
+    }
+  }, [isPaused, setIsPaused, settings]);
+
+  useEffect(() => {
+    if (settings) {
+      DeskThing.send({
+        type: "currentMode",
+        payload: currentMode,
+      });
+    }
+  }, [currentMode, setCurrentMode, settings]);
+
+  useEffect(() => {
+    if (settings) {
+      DeskThing.send({
+        type: "currentSession",
+        payload: currentSession,
+      });
+    }
+  }, [currentSession, setCurrentSession, settings]);
+
+  useEffect(() => {
+    if (settings) {
+      DeskThing.send({
+        type: "isComplete",
+        payload: isComplete,
+      });
+    }
+  }, [isComplete, setIsComplete, settings]);
 
   function startSession(sessionNum: number) {
     if (!settings) return;
@@ -171,9 +208,7 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
 
   const handleReset = () => {
     if (!settings) return;
-
     startSession(0);
-    setIsPaused(false);
   };
 
   const prevSettingsRef = useRef<PomodoroSettings | null>(settings);

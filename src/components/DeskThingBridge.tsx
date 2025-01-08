@@ -1,7 +1,7 @@
 import { DeskThing, SocketData } from "deskthing-client";
 import { coerceSettings, requirePomodoroContext } from "../util";
 import { useEffect, useState } from "react";
-import { PomodoroSettings } from "../types";
+import type { PomodoroSettings, TimerMode } from "../types";
 import {
   BREAK_MINUTES,
   COLOR_A_DEFAULT,
@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS = {
   colorB: COLOR_B_DEFAULT,
 };
 
-export default function SettingsBridge() {
+export default function DeskThingBridge() {
   const [data, setData] = useState<any>(null);
   const p = requirePomodoroContext();
 
@@ -39,7 +39,7 @@ export default function SettingsBridge() {
     setCssProperty("--themeA", settings.colorA);
     setCssProperty("--themeB", settings.colorB);
     p.handleSettingsChange(settings);
-    // setData(JSON.stringify({ source, ...settings }, undefined, 2));
+    setData(JSON.stringify({ source, ...settings }, undefined, 2));
   };
 
   const handleError = () => {};
@@ -60,22 +60,39 @@ export default function SettingsBridge() {
       }
       handleSettings("initial", settings);
 
-      const serverState = await DeskThing.fetchData<SocketData>(
-        "server-timer-state",
-        {
-          type: "get",
-          request: "server-timer-state",
-        }
-      );
+      const serverState: any = await DeskThing.fetchData("server-timer-state", {
+        type: "get",
+        request: "server-timer-state",
+      });
 
       setData("serverState payload " + JSON.stringify(serverState));
 
-      const timeToStart = serverState
-        ? Number(serverState)
-        : settings.sessionMinutes * 60;
+      // TODO: get and write additional Properties
+      // Default values to use if no saved server state:
+      let timeToStart = settings.sessionMinutes * 60;
+      let isPaused = true;
+      let currentMode: TimerMode = "session";
+      let currentSession: number = 0;
+      let isComplete: boolean = false;
+
+      // Use saved server state values if returned:
+      if (serverState !== undefined && Object.keys(serverState).length > 0) {
+        timeToStart = Number(serverState.timeLeftSec);
+        isPaused = serverState.isPaused;
+        currentMode = serverState.currentMode;
+        currentSession = serverState.currentSession;
+        isComplete = serverState.isComplete;
+        if (isComplete) {
+          timeToStart = 0;
+          isPaused = true;
+        }
+      }
 
       p.setTimeLeftSec(timeToStart);
-      p.setIsPaused(false);
+      p.setIsPaused(isPaused);
+      p.setCurrentMode(currentMode);
+      p.setCurrentSession(currentSession);
+      p.setIsComplete(isComplete);
     };
 
     fetchSettingsFromServer();
@@ -88,9 +105,10 @@ export default function SettingsBridge() {
     });
   });
 
-  // TODO: change back to based on dev mode
+  // TODO: change back
   return true ? (
-    <div className="h-[250px] text-black bg-white">
+    // return p.settings?.devMode ? (
+    <div className="h-[75px] text-black bg-white">
       <pre>
         <code>{data}</code>
       </pre>

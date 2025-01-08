@@ -2,6 +2,7 @@ import { DataInterface, DeskThing, IncomingEvent } from "deskthing-server";
 import { setupSettings } from "./settings";
 import { notify } from "./notify";
 import { APP_ID } from "../src/constants";
+import { type TimerMode } from "../src/types";
 
 function prefixMessage(message: string): string {
   return `${APP_ID}: ${message}`;
@@ -20,23 +21,37 @@ const start = async () => {
   const data = await DeskThing.getData();
   await setupSettings(data, sendLog);
 
-  let latestTimerValue: number | undefined;
+  // TODO: store additional Properties
+  let timeLeftSec: number | undefined;
+  let isPaused: boolean | undefined;
+  let currentMode: TimerMode | undefined;
+  let currentSession: number | undefined;
+  let isComplete: boolean | undefined;
 
+  // We run a timer on the server, as a fallback for when the client-side app is backgrounded
+  // TODO: handleNext equivalent on server
   setInterval(function () {
-    if (latestTimerValue) latestTimerValue = latestTimerValue - 1;
+    if (timeLeftSec && !isPaused) timeLeftSec = timeLeftSec - 1;
   }, 1000);
 
-  DeskThing.on("timerState" as IncomingEvent, async (data) => {
-    // sendLog(
-    //   "timerState data received on server: " +
-    //     JSON.stringify(data, undefined, 2)
-    // );
+  DeskThing.on("timeLeftSec" as IncomingEvent, async (data) => {
+    timeLeftSec = data.payload;
+  });
 
-    latestTimerValue = data.payload.timeLeftSec;
-    sendLog(
-      "current latestTimerValue on server: " +
-        JSON.stringify(latestTimerValue, undefined, 2)
-    );
+  DeskThing.on("isPaused" as IncomingEvent, async (data) => {
+    isPaused = data.payload ?? false;
+  });
+
+  DeskThing.on("currentMode" as IncomingEvent, async (data) => {
+    currentMode = data.payload;
+  });
+
+  DeskThing.on("currentSession" as IncomingEvent, async (data) => {
+    currentSession = data.payload;
+  });
+
+  DeskThing.on("isComplete" as IncomingEvent, async (data) => {
+    isComplete = data.payload;
   });
 
   DeskThing.on("get", async (data) => {
@@ -59,13 +74,18 @@ const start = async () => {
     }
 
     // server-timer-state
+    // TODO: send back additional properties
     if (data.request == "server-timer-state") {
-      sendLog(
-        "get server-timer-state: Sending timer state: " + latestTimerValue
-      );
+      sendLog("get server-timer-state: Sending timer state: " + timeLeftSec);
       DeskThing.send({
         type: "server-timer-state",
-        payload: latestTimerValue,
+        payload: {
+          timeLeftSec,
+          isPaused,
+          currentMode,
+          currentSession,
+          isComplete,
+        },
       });
     }
   });

@@ -43,8 +43,7 @@ export default function Timer() {
           playNotification();
           p.handleNext();
         } else {
-          // p.setTimeLeftSec((prev) => Math.max(prev - 1, 0));
-          p.setTimeLeftSec((prev) => prev - 1);
+          p.setTimeLeftSec((prev) => Math.max(prev - 1, 0));
         }
       }
     }, TIMER_INTERVAL);

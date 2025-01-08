@@ -1,4 +1,4 @@
-import { TimerMode } from "../types";
+import type { TimerMode } from "../types";
 import { clsx } from "clsx";
 import { requirePomodoroContext } from "../util";
 

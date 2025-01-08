@@ -3,7 +3,7 @@ import {
   PomodoroContextType,
   usePomodoroContext,
 } from "./contexts/PomodoroContext";
-import { PomodoroSettings } from "./types";
+import type { PomodoroSettings } from "./types";
 import { IS_DEV } from "./constants";
 
 export const formatTime = (seconds: number): string => {

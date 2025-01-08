@@ -1,4 +1,4 @@
-import { IconComponentProps } from "./types";
+import type { IconComponentProps } from "./types";
 
 function Restart(props: IconComponentProps) {
   const strokewidth = props.strokewidth || 1.5;
