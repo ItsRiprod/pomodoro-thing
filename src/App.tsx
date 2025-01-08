@@ -1,12 +1,14 @@
 import React from "react";
 import { PomodoroProvider } from "./contexts/PomodoroContext";
 import Pomodoro from "./Pomodoro";
-import ConfigBridge from "./components/ConfigBridge";
+import SettingsBridge from "./components/SettingsBridge";
+import StateBridge from "./components/StateBridge";
 
 const App: React.FC = () => {
   return (
     <PomodoroProvider>
-      <ConfigBridge />
+      <SettingsBridge />
+      <StateBridge />
       <Pomodoro />
     </PomodoroProvider>
   );

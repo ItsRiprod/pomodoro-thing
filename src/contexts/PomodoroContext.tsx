@@ -9,6 +9,7 @@ import {
 import { BreakType, PomodoroSettings, TimerMode } from "../types";
 
 import { playNotification } from "../util";
+import { DeskThing } from "deskthing-client";
 
 // TODO: figure out what we can use storage-wise on DeskThing Client, or get this from Server to avoid losing state on e.g. app switches
 export interface PomodoroContextType {
@@ -55,6 +56,15 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   function handlePause() {
     setIsPaused((prev) => !prev);
   }
+
+  useEffect(() => {
+    if (settings && timeLeftSec !== 0) {
+      DeskThing.send({
+        type: "timerState",
+        payload: { test: "test", timeLeftSec },
+      });
+    }
+  }, [timeLeftSec, setTimeLeftSec, settings]);
 
   function startSession(sessionNum: number) {
     if (!settings) return;

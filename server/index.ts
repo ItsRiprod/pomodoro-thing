@@ -19,6 +19,56 @@ const start = async () => {
   sendLog("Server Started");
   const data = await DeskThing.getData();
   await setupSettings(data, sendLog);
+
+  let latestTimerValue: number | undefined;
+
+  setInterval(function () {
+    if (latestTimerValue) latestTimerValue = latestTimerValue - 1;
+  }, 1000);
+
+  DeskThing.on("timerState" as IncomingEvent, async (data) => {
+    // sendLog(
+    //   "timerState data received on server: " +
+    //     JSON.stringify(data, undefined, 2)
+    // );
+
+    latestTimerValue = data.payload.timeLeftSec;
+    sendLog(
+      "current latestTimerValue on server: " +
+        JSON.stringify(latestTimerValue, undefined, 2)
+    );
+  });
+
+  DeskThing.on("get", async (data) => {
+    // initial-settings
+    if (data.request == "initial-settings") {
+      const data = await DeskThing.getData();
+      const settings = data?.settings;
+      if (!settings) {
+        sendError("get settings: No settings returned by DeskThing");
+        return;
+      }
+      sendLog(
+        "get settings: Sending settings: " +
+          JSON.stringify(settings, undefined, 2)
+      );
+      DeskThing.send({
+        type: "initial-settings",
+        payload: settings,
+      });
+    }
+
+    // server-timer-state
+    if (data.request == "server-timer-state") {
+      sendLog(
+        "get server-timer-state: Sending timer state: " + latestTimerValue
+      );
+      DeskThing.send({
+        type: "server-timer-state",
+        payload: latestTimerValue,
+      });
+    }
+  });
 };
 
 const stop = async () => {
@@ -26,16 +76,12 @@ const stop = async () => {
 };
 
 function handleData(data: DataInterface | null) {
-  sendLog("handleData: running");
   const settings = data?.settings;
   if (!settings) {
     sendError("handleData: No settings ");
     return;
   }
 
-  sendLog(
-    "handleData: Sending settings: " + JSON.stringify(settings, undefined)
-  );
   DeskThing.send({
     type: "settings-update",
     payload: settings,
@@ -52,24 +98,6 @@ DeskThing.on("notify" as IncomingEvent, async () => {
     notify({ onError: sendError });
   } else {
     DeskThing.sendLog("Audio disabled. Skipping notification");
-  }
-});
-
-DeskThing.on("get", async (data) => {
-  if (data.request == "initial-settings") {
-    const data = await DeskThing.getData();
-    const settings = data?.settings;
-    if (!settings) {
-      sendError("get settings: No settings returned by DeskThing");
-      return;
-    }
-    sendLog(
-      "get settings: Sending settings: " + JSON.stringify(settings, undefined)
-    );
-    DeskThing.send({
-      type: "initial-settings",
-      payload: settings,
-    });
   }
 });
 
