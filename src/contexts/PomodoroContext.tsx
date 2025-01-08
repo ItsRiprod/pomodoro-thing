@@ -55,10 +55,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     setIsPaused((prev) => !prev);
   }
 
-  // On timeLeftSec changes, sync the value to the server, so that we can pick up where we left off after a background event
-  // TODO: can we remove 0 check?
+  // On state changes, sync the value to the server, so we can pick up where we left off after a background event
   useEffect(() => {
-    if (settings && timeLeftSec !== 0) {
+    if (settings) {
       DeskThing.send({
         type: "timeLeftSec",
         payload: timeLeftSec,
@@ -66,7 +65,6 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
     }
   }, [timeLeftSec, setTimeLeftSec, settings]);
 
-  // TODO: sync additional Properties
   useEffect(() => {
     if (settings) {
       DeskThing.send({
@@ -259,13 +257,14 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
 // Otherwise, timer state might get a little wonky — e.g. user reduces numSessions to 2, when on #4
 // Nice to have: More sophisticated logic here that combines *which* settings changed with the current state
 function shouldReset(n: PomodoroSettings, o: PomodoroSettings): boolean {
-  if (
-    n.numSessions !== o.numSessions ||
-    n.sessionMinutes !== o.sessionMinutes ||
-    n.shortBreakMinutes !== o.shortBreakMinutes ||
-    n.longBreakMinutes !== o.longBreakMinutes
-  ) {
-    return true;
-  }
-  return false;
+  return true;
+  // if (
+  //   n.numSessions !== o.numSessions ||
+  //   n.sessionMinutes !== o.sessionMinutes ||
+  //   n.shortBreakMinutes !== o.shortBreakMinutes ||
+  //   n.longBreakMinutes !== o.longBreakMinutes
+  // ) {
+  //   return true;
+  // }
+  // return false;
 }

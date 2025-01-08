@@ -67,7 +67,6 @@ export default function DeskThingBridge() {
 
       setData("serverState payload " + JSON.stringify(serverState));
 
-      // TODO: get and write additional Properties
       // Default values to use if no saved server state:
       let timeToStart = settings.sessionMinutes * 60;
       let isPaused = true;
@@ -105,9 +104,7 @@ export default function DeskThingBridge() {
     });
   });
 
-  // TODO: change back
-  return true ? (
-    // return p.settings?.devMode ? (
+  return p.settings?.devMode ? (
     <div className="h-[75px] text-black bg-white">
       <pre>
         <code>{data}</code>
