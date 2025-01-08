@@ -6,6 +6,7 @@ import Timer from "./components/Timer";
 import { requirePomodoroContext } from "./util";
 import clsx from "clsx";
 import Spinner from "./components/Spinner";
+import Mute from "./components/icons/Mute";
 
 const Pomodoro: React.FC = () => {
   const p = requirePomodoroContext();
@@ -40,6 +41,11 @@ const Pomodoro: React.FC = () => {
           mainClass
         )}
       >
+        {!p.settings?.audioEnabled && (
+          <div className="absolute bottom-0 right-0 p-6">
+            <Mute className="size-12 text-white" />
+          </div>
+        )}
         <SessionOverview />
         <div className="h-9" />
         <Timer />
