@@ -34,7 +34,7 @@ export const setupSettings = async (
         value: "#fef08a",
       },
       numSessions: {
-        label: "Sessions",
+        label: "Focus Blocks",
         description: "The number of focus blocks in your session",
         type: "number",
         value: 4,
