@@ -76,7 +76,7 @@ export default function Timer() {
   }, [debouncedDecrement, debouncedIncrement]);
 
   return (
-    <p className="z-30 font-bold text-[140px] text-white">
+    <p className="z-30 font-bold text-[140px] leading-none text-white ">
       {formatTime(p.timeLeftSec)}
     </p>
   );

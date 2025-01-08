@@ -14,15 +14,17 @@ export default function ControlIcon({
   return (
     <button
       onTouchStart={onClick}
-      className="size-[85px] rounded-full focus:outline-none focus:ring-0 bg-transparent border-[4px] border-white p-2 flex items-center justify-center"
+      className="w-full focus:outline-none focus:ring-0 bg-transparent px-3 flex items-center justify-center"
     >
-      {getIconElem(controlType)}
+      <div className="size-[100px] rounded-full focus:outline-none focus:ring-0 bg-transparent border-[4px] border-white p-2 flex items-center justify-center">
+        {getIconElem(controlType)}
+      </div>
     </button>
   );
 }
 
 export function getIconElem(controlType: ControlType) {
-  const iconClassName = "text-white size-[60px]";
+  const iconClassName = "text-white size-[75px]";
   switch (controlType) {
     case "pause":
       return <Pause className={iconClassName} />;

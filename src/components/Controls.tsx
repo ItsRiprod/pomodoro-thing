@@ -6,7 +6,7 @@ export default function Controls() {
   const p = requirePomodoroContext();
 
   return (
-    <div className="z-30 flex flex-row items-center space-x-1 text-white">
+    <div className="z-30 flex flex-row items-center space-x-0 text-white">
       <StageIcon controlType="prev" onClick={() => p.handlePrevious()} />
       <MainControl />
       <StageIcon controlType="next" onClick={() => p.handleNext()} />

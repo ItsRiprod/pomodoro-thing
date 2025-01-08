@@ -17,7 +17,7 @@ export default function StageIcon({
     >
       <ChevronRight
         className={clsx(
-          "size-[85px] cursor-pointer",
+          "size-[90px] cursor-pointer",
           controlType === "prev" && "rotate-180"
         )}
       />

@@ -20,7 +20,7 @@ const Pomodoro: React.FC = () => {
   }, []);
 
   const mainClass =
-    "fixed bg-gradient-to-r w-screen h-screen flex justify-center items-center flex-col space-y-2.5 font-sans transition-all duration-500";
+    "fixed bg-gradient-to-r w-screen h-screen flex flex-col justify-center items-center font-sans transition-all duration-500";
 
   return (
     <>
@@ -41,7 +41,9 @@ const Pomodoro: React.FC = () => {
         )}
       >
         <SessionOverview />
+        <div className="h-9" />
         <Timer />
+        <div className="h-6" />
         <Controls />
       </div>
     </>

@@ -6,8 +6,8 @@ export default function SessionOverview({}) {
   const p = requirePomodoroContext();
 
   return (
-    <div className="z-30 flex flex-col items-center">
-      <p className="text-3xl py-2">
+    <div className="z-30 flex flex-col items-center ">
+      <p className="text-4xl py-3">
         {getModeEmoji(p.currentMode, p.timeLeftSec)}
       </p>
       <div className="flex flex-row items-center space-x-2 ">
@@ -15,7 +15,7 @@ export default function SessionOverview({}) {
           <div
             key={idx}
             className={clsx(
-              "rounded-full size-3 ring-white ring-1",
+              "rounded-full size-4 ring-white ring-1",
               idx <= p.currentSession ? "bg-white" : " bg-transparent",
               idx === p.currentSession && p.timeLeftSec !== 0 && "animate-pulse"
             )}
