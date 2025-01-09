@@ -4,12 +4,12 @@
   "isScreenSaver": false,
   "isWebApp": true,
   "requires": [],
-  "version": "0.1.0",
+  "version": "0.10.0",
   "description": "A Pomodoro timer DeskThing app",
   "author": "Graham Place",
   "platforms": ["linux", "windows", "mac"],
-  "homepage": "",
-  "repository": "",
+  "homepage": "https://github.com/grahamplace/pomodoro-thing",
+  "repository": "https://github.com/grahamplace/pomodoro-thing",
   "id": "pomodoro-timer",
   "template": "full"
 }
