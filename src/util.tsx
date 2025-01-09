@@ -1,4 +1,4 @@
-import { DeskThing } from "deskthing-client";
+import { AppSettings, DeskThing } from "deskthing-client";
 import {
   PomodoroContextType,
   usePomodoroContext,
@@ -26,8 +26,14 @@ export function playNotification() {
   DeskThing.send({ type: "notify" });
 }
 
+/**
+ * Takes the AppSettings object and parses the expected settings. Throws an error if he settings are missing.
+ * @param data
+ * @param handleError 
+ * @returns 
+ */
 export function coerceSettings(
-  data: any,
+  data: AppSettings,
   handleError: (message: string) => void
 ): PomodoroSettings {
   if (!data.numSessions || !data.numSessions.value) {
@@ -60,12 +66,12 @@ export function coerceSettings(
 
   return {
     devMode: IS_DEV,
-    numSessions: data.numSessions.value,
-    sessionMinutes: data.sessionLength.value,
-    shortBreakMinutes: data.shortBreakLength.value,
-    longBreakMinutes: data.longBreakLength.value,
-    audioEnabled: data.audioEnabled.value,
-    colorA: data.colorA.value,
-    colorB: data.colorB.value,
+    numSessions: data.numSessions.value as number,
+    sessionMinutes: data.sessionLength.value as number,
+    shortBreakMinutes: data.shortBreakLength.value as number,
+    longBreakMinutes: data.longBreakLength.value as number,
+    audioEnabled: data.audioEnabled.value as boolean,
+    colorA: data.colorA.value as string,
+    colorB: data.colorB.value as string,
   };
 }

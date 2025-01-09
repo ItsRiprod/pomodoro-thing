@@ -63,7 +63,8 @@ const start = async () => {
   };
 
   // We run a timer on the server, as a fallback for when the client-side app is backgrounded
-  setInterval(async function () {
+  // Uses the deskthing server's background task loop so that it can be cancelled when the app is paused or killed 
+  DeskThing.addBackgroundTaskLoop(async () => {
     if (timeLeftSec && !isPaused) {
       timeLeftSec = timeLeftSec - 1;
       hasTimerStarted = true;
@@ -102,7 +103,7 @@ const start = async () => {
         }
       }
     }
-  }, 1000);
+  }, 1000)
 
   DeskThing.on("timeLeftSec" as IncomingEvent, async (data) => {
     timeLeftSec = data.payload;
