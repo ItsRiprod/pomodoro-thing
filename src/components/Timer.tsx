@@ -36,7 +36,7 @@ export default function Timer() {
 
   // Set up timer, which can be paused/unpaused based on isPaused
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setInterval(async () => {
       if (!p.isPaused) {
         const nextValue = p.timeLeftSec - 1;
         if (nextValue <= 0) {
