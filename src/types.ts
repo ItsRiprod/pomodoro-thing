@@ -10,3 +10,11 @@ export type PomodoroSettings = {
   colorA: string;
   colorB: string;
 };
+
+export type TimerState = {
+  timeLeftSec: number;
+  isPaused: boolean;
+  currentMode: TimerMode;
+  currentSession: number;
+  isComplete: boolean;
+};

@@ -1,7 +1,7 @@
-import { DeskThing, SocketData } from "deskthing-client";
+import { AppSettings, DeskThing } from "deskthing-client";
 import { coerceSettings, requirePomodoroContext } from "../util";
 import { useEffect, useState } from "react";
-import type { PomodoroSettings, TimerMode } from "../types";
+import type { PomodoroSettings, TimerMode, TimerState } from "../types";
 import {
   BREAK_MINUTES,
   COLOR_A_DEFAULT,
@@ -47,23 +47,27 @@ export default function DeskThingBridge() {
   // Initial settings are configured by a proactive call to the server to fetch settings data on mount:
   useEffect(() => {
     const fetchSettingsFromServer = async () => {
-      const serverData = await DeskThing.fetchData<SocketData>(
+      const serverData = await DeskThing.fetchData<AppSettings>(
         "initial-settings",
         {
           type: "get",
           request: "initial-settings",
         }
       );
+
       let settings = DEFAULT_SETTINGS;
       if (serverData) {
         settings = coerceSettings(serverData, handleError);
       }
       handleSettings("initial", settings);
 
-      const serverState: any = await DeskThing.fetchData("server-timer-state", {
-        type: "get",
-        request: "server-timer-state",
-      });
+      const serverState = await DeskThing.fetchData<TimerState>(
+        "server-timer-state",
+        {
+          type: "get",
+          request: "server-timer-state",
+        }
+      );
 
       setData("serverState payload " + JSON.stringify(serverState));
 

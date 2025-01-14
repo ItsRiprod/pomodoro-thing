@@ -22,6 +22,7 @@ const start = async () => {
   await setupSettings(data, sendLog);
 
   let timeLeftSec: number | undefined = undefined;
+  let startTimestamp: number | undefined = undefined;
   let isPaused: boolean | undefined = undefined;
   let currentMode: TimerMode = "session";
   let currentSession: number = 0;
@@ -63,9 +64,17 @@ const start = async () => {
   };
 
   // We run a timer on the server, as a fallback for when the client-side app is backgrounded
-  setInterval(async function () {
+  // Uses the deskthing server's background task loop so that it can be cancelled when the app is paused or killed
+  DeskThing.addBackgroundTaskLoop(async () => {
     if (timeLeftSec && !isPaused) {
-      timeLeftSec = timeLeftSec - 1;
+      if (startTimestamp === undefined) {
+        startTimestamp = Date.now();
+      }
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - startTimestamp) / 1000);
+      startTimestamp = now;
+      timeLeftSec = timeLeftSec - elapsedSeconds;
+
       hasTimerStarted = true;
 
       // Rough equivalent of handleNext on client
@@ -101,6 +110,8 @@ const start = async () => {
           isPaused = true;
         }
       }
+    } else if (isPaused) {
+      startTimestamp = undefined;
     }
   }, 1000);
 
