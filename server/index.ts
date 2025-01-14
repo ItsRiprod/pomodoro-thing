@@ -22,7 +22,6 @@ const start = async () => {
   await setupSettings(data, sendLog);
 
   let timeLeftSec: number | undefined = undefined;
-  // The timestamp of when the last timer was started.
   let startTimestamp: number | undefined = undefined;
   let isPaused: boolean | undefined = undefined;
   let currentMode: TimerMode = "session";
@@ -65,20 +64,15 @@ const start = async () => {
   };
 
   // We run a timer on the server, as a fallback for when the client-side app is backgrounded
-  // Uses the deskthing server's background task loop so that it can be cancelled when the app is paused or killed 
+  // Uses the deskthing server's background task loop so that it can be cancelled when the app is paused or killed
   DeskThing.addBackgroundTaskLoop(async () => {
     if (timeLeftSec && !isPaused) {
-      // Add the timestamp if it doesn't exist
       if (startTimestamp === undefined) {
         startTimestamp = Date.now();
       }
-      // Get the current time
       const now = Date.now();
-      // Calculate the elapsed time in seconds
       const elapsedSeconds = Math.floor((now - startTimestamp) / 1000);
-      // Update the previous timestamp
       startTimestamp = now;
-      // Calculate the new time left in seconds
       timeLeftSec = timeLeftSec - elapsedSeconds;
 
       hasTimerStarted = true;
@@ -119,7 +113,7 @@ const start = async () => {
     } else if (isPaused) {
       startTimestamp = undefined;
     }
-  }, 1000)
+  }, 1000);
 
   DeskThing.on("timeLeftSec" as IncomingEvent, async (data) => {
     timeLeftSec = data.payload;
@@ -142,7 +136,7 @@ const start = async () => {
   });
 
   DeskThing.on("get", async (data) => {
-    // initial-settings - not used currently and replaced with DeskThing.getSettings() on the client
+    // initial-settings
     if (data.request == "initial-settings") {
       const data = await DeskThing.getData();
       const settings = data?.settings;
