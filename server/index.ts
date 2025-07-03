@@ -1,25 +1,31 @@
-import { DataInterface, DeskThing, IncomingEvent } from "deskthing-server";
+import { createDeskThing } from '@deskthing/server';
 import { setupSettings } from "./settings";
 import { notify } from "./notify";
 import { APP_ID } from "../src/constants";
-import { type TimerMode } from "../src/types";
+import { CLIENT_SERVER, SERVER_CLIENT, type ClientToServerData, type ServerToClientData, type TimerMode } from "../src/types";
+import { AppDataInterface, AppSettings, DESKTHING_EVENTS, SavedData } from '@deskthing/types';
+
+// This is for cleaning up the listeners when the app is stopped
+let cleanupFunctions: (() => void)[] = []
+
+const DeskThing = createDeskThing<ClientToServerData, ServerToClientData>();
 
 function prefixMessage(message: string): string {
   return `${APP_ID}: ${message}`;
 }
 
 function sendLog(message: string) {
-  DeskThing.sendLog(prefixMessage(message));
+  console.log(prefixMessage(message));
 }
 
 function sendError(message: string) {
-  DeskThing.sendError(prefixMessage(message));
+  console.error(prefixMessage(message));
 }
 
 const start = async () => {
   sendLog("Server Started");
-  const data = await DeskThing.getData();
-  await setupSettings(data, sendLog);
+  const settings = await DeskThing.getSettings();
+  await setupSettings(settings, sendLog);
 
   let timeLeftSec: number | undefined = undefined;
   let startTimestamp: number | undefined = undefined;
@@ -30,23 +36,22 @@ const start = async () => {
   let hasTimerStarted: boolean = false;
 
   const handleReset = () => {
-    timeLeftSec = data?.settings?.sessionLength
-      ? (data?.settings?.sessionLength.value as number) * 60
+    timeLeftSec = settings?.sessionLength
+      ? (settings?.sessionLength.value as number) * 60
       : undefined;
     currentMode = "session";
     currentSession = 0;
     isComplete = false;
   };
 
-  function handleData(data: DataInterface | null) {
-    const settings = data?.settings;
+  function handleSettings(settings: AppSettings | null) {
     if (!settings) {
       sendError("handleData: No settings ");
       return;
     }
 
     DeskThing.send({
-      type: "settings-update",
+      type: SERVER_CLIENT.SETTINGS_UPDATE,
       payload: settings,
     });
 
@@ -54,18 +59,18 @@ const start = async () => {
   }
 
   const handleNotify = async () => {
-    const data = await DeskThing.getData();
-    if (data?.settings?.audioEnabled.value) {
-      DeskThing.sendLog("Playing audio notification");
+    const settings = await DeskThing.getSettings();
+    if (settings?.audioEnabled.value) {
+      console.log("Playing audio notification");
       notify({ onError: sendError });
     } else {
-      DeskThing.sendLog("Audio disabled. Skipping notification");
+      console.log("Audio disabled. Skipping notification");
     }
   };
 
   // We run a timer on the server, as a fallback for when the client-side app is backgrounded
   // Uses the deskthing server's background task loop so that it can be cancelled when the app is paused or killed
-  DeskThing.addBackgroundTaskLoop(async () => {
+  DeskThing.setInterval(async () => {
     if (timeLeftSec && !isPaused) {
       if (startTimestamp === undefined) {
         startTimestamp = Date.now();
@@ -81,29 +86,29 @@ const start = async () => {
       if (timeLeftSec === 0) {
         // Set next mode. Depends on current mode + total number of sessions configured
         if (currentMode === "session") {
-          const data = await DeskThing.getData();
+          const settings = await DeskThing.getSettings();
           if (
             currentSession ===
-            Number(data?.settings?.numSessions.value ?? 0) - 1
+            Number(settings?.numSessions.value ?? 0) - 1
           ) {
             currentMode = "long-break";
             isComplete = false;
-            timeLeftSec = data?.settings?.longBreakLength
-              ? (data?.settings?.longBreakLength.value as number) * 60
+            timeLeftSec = settings?.longBreakLength
+              ? (settings?.longBreakLength.value as number) * 60
               : 0;
           } else {
             currentMode = "short-break";
             isComplete = false;
-            timeLeftSec = data?.settings?.shortBreakLength
-              ? (data?.settings?.shortBreakLength.value as number) * 60
+            timeLeftSec = settings?.shortBreakLength
+              ? (settings?.shortBreakLength.value as number) * 60
               : 0;
           }
         } else if (currentMode === "short-break") {
-          const data = await DeskThing.getData();
+          const settings = await DeskThing.getSettings();
           currentMode = "session";
           isComplete = false;
           currentSession = (currentSession ?? 0) + 1;
-          timeLeftSec = (data?.settings?.sessionLength.value as number) * 60;
+          timeLeftSec = (settings?.sessionLength.value as number) * 60;
         } else if (currentMode === "long-break") {
           timeLeftSec = 0;
           isComplete = true;
@@ -115,49 +120,53 @@ const start = async () => {
     }
   }, 1000);
 
-  DeskThing.on("timeLeftSec" as IncomingEvent, async (data) => {
+  const fun1 = DeskThing.on(CLIENT_SERVER.TIME_LEFT_SEC, async (data) => {
     timeLeftSec = data.payload;
   });
+  cleanupFunctions.push(fun1);
 
-  DeskThing.on("isPaused" as IncomingEvent, async (data) => {
+  const fun2 = DeskThing.on(CLIENT_SERVER.IS_PAUSED, async (data) => {
     isPaused = data.payload ?? false;
   });
+  cleanupFunctions.push(fun2);
 
-  DeskThing.on("currentMode" as IncomingEvent, async (data) => {
+  const fun3 = DeskThing.on(CLIENT_SERVER.CURRENT_MODE, async (data) => {
     currentMode = data.payload;
   });
+  cleanupFunctions.push(fun3);
 
-  DeskThing.on("currentSession" as IncomingEvent, async (data) => {
+  const fun4 = DeskThing.on(CLIENT_SERVER.CURRENT_SESSION, async (data) => {
     currentSession = data.payload;
   });
+  cleanupFunctions.push(fun4);
 
-  DeskThing.on("isComplete" as IncomingEvent, async (data) => {
+  const fun5 = DeskThing.on(CLIENT_SERVER.IS_COMPLETE, async (data) => {
     isComplete = data.payload;
   });
+  cleanupFunctions.push(fun5);
 
-  DeskThing.on("get", async (data) => {
+  const fun6 = DeskThing.on(CLIENT_SERVER.GET, async (data) => {
     // initial-settings
-    if (data.request == "initial-settings") {
-      const data = await DeskThing.getData();
-      const settings = data?.settings;
+    if (data.request == SERVER_CLIENT.INITIAL_SETTINGS) {
+      const settings = await DeskThing.getSettings();
       if (!settings) {
         sendError("get settings: No settings returned by DeskThing");
         return;
       }
       DeskThing.send({
-        type: "initial-settings",
+        type: SERVER_CLIENT.INITIAL_SETTINGS,
         payload: settings,
       });
     }
 
     // server-timer-state
-    if (data.request == "server-timer-state") {
+    if (data.request == SERVER_CLIENT.SERVER_TIMER_STATE) {
       DeskThing.send({
-        type: "server-timer-state",
+        type: SERVER_CLIENT.SERVER_TIMER_STATE,
         payload: hasTimerStarted
           ? {
-              timeLeftSec,
-              isPaused,
+              timeLeftSec: timeLeftSec || 0,
+              isPaused: isPaused || false,
               currentMode,
               currentSession,
               isComplete,
@@ -166,19 +175,25 @@ const start = async () => {
       });
     }
   });
+  cleanupFunctions.push(fun6);
 
-  DeskThing.on("notify" as IncomingEvent, () => {
+  const fun7 = DeskThing.on(CLIENT_SERVER.NOTIFY, () => {
     handleNotify();
   });
+  cleanupFunctions.push(fun7);
 
-  DeskThing.on("data", handleData);
+  const fun8 = DeskThing.on(DESKTHING_EVENTS.SETTINGS, (data) => handleSettings(data.payload));
+  cleanupFunctions.push(fun8);
 };
 
 const stop = async () => {
   sendLog("Server Stopped");
+
+  // cleanup all the listeners so they dont get defined multiple times
+  cleanupFunctions.forEach((cleanupFunction) => cleanupFunction());
+  cleanupFunctions = [];
 };
 
-DeskThing.on("start", start);
-DeskThing.on("stop", stop);
+DeskThing.on(DESKTHING_EVENTS.START, start);
+DeskThing.on(DESKTHING_EVENTS.STOP, stop);
 
-export { DeskThing };

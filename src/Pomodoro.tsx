@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { DeskThing, SocketData } from "deskthing-client";
+import { SocketData } from '@deskthing/types'
+import { DeskThing } from '@deskthing/client';
 import SessionOverview from "./components/SessionOverview";
 import Controls from "./components/Controls";
 import Timer from "./components/Timer";

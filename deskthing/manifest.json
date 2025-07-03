@@ -1,0 +1,26 @@
+{
+  "id": "pomodoro-timer",
+  "isWebApp": true,
+  "requires": [],
+  "label": "Pomodoro Timer",
+  "version": "0.10.2",
+  "description": "A Pomodoro timer DeskThing app",
+  "author": "Graham Place",
+  "platforms": [
+    "linux",
+    "windows",
+    "mac"
+  ],
+  "homepage": "https://github.com/grahamplace/pomodoro-thing",
+  "repository": "https://github.com/grahamplace/pomodoro-thing",
+  "template": "full",
+  "tags": [
+    false,
+    false
+  ],
+  "requiredVersions": {
+    "server": ">=0.11.8",
+    "client": ">=0.11.2"
+  },
+  "updateUrl": "https://github.com/grahamplace/pomodoro-thing"
+}

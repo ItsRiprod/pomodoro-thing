@@ -1,4 +1,5 @@
-import { AppSettings, DeskThing } from "deskthing-client";
+import { AppSettings } from '@deskthing/types'
+import { DeskThing } from '@deskthing/client';
 import {
   PomodoroContextType,
   usePomodoroContext,

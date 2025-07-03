@@ -6,9 +6,19 @@ import {
   useRef,
   useState,
 } from "react";
-import type { BreakType, PomodoroSettings, TimerMode } from "../types";
+import {
+  CLIENT_SERVER,
+  type BreakType,
+  type ClientToServerData,
+  type PomodoroSettings,
+  type ServerToClientData,
+  type TimerMode,
+} from "../types";
 import { playNotification } from "../util";
-import { DeskThing } from "deskthing-client";
+import { createDeskThing } from "@deskthing/client";
+
+// This asserts e2e type safety between the client and server
+const DeskThing = createDeskThing<ServerToClientData, ClientToServerData>();
 
 export interface PomodoroContextType {
   settings: PomodoroSettings | null;
@@ -59,8 +69,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   useEffect(() => {
     if (settings) {
       DeskThing.send({
-        type: "timeLeftSec",
+        type: CLIENT_SERVER.TIME_LEFT_SEC,
         payload: timeLeftSec,
+        request: 'set'
       });
     }
   }, [timeLeftSec, setTimeLeftSec, settings]);
@@ -68,8 +79,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   useEffect(() => {
     if (settings) {
       DeskThing.send({
-        type: "isPaused",
+        type: CLIENT_SERVER.IS_PAUSED,
         payload: isPaused,
+        request: 'set'
       });
     }
   }, [isPaused, setIsPaused, settings]);
@@ -77,8 +89,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   useEffect(() => {
     if (settings) {
       DeskThing.send({
-        type: "currentMode",
+        type: CLIENT_SERVER.CURRENT_MODE,
         payload: currentMode,
+        request: 'set'
       });
     }
   }, [currentMode, setCurrentMode, settings]);
@@ -86,8 +99,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   useEffect(() => {
     if (settings) {
       DeskThing.send({
-        type: "currentSession",
+        type: CLIENT_SERVER.CURRENT_SESSION,
         payload: currentSession,
+        request: 'set'
       });
     }
   }, [currentSession, setCurrentSession, settings]);
@@ -95,8 +109,9 @@ export const PomodoroProvider: React.FC<PomodoroProviderProps> = ({
   useEffect(() => {
     if (settings) {
       DeskThing.send({
-        type: "isComplete",
+        type: CLIENT_SERVER.IS_COMPLETE,
         payload: isComplete,
+        request: 'set'
       });
     }
   }, [isComplete, setIsComplete, settings]);
